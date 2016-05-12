@@ -18,7 +18,8 @@
     "bower_components",
     "test",
     "tests",
-    "make-release.sh"
+    "make-release.sh",
+    "gulpfile.js"
   ],
   "dependencies": {
     "angular": "^1.5",
