@@ -1,0 +1,29 @@
+{
+  "name": "aetm-angular-oauth2",
+  "version": "1.0.1",
+  "description": "",
+  "main": "./dist/aetm-angular-oauth2.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alexetmanon/aetm-angular-oauth2.git"
+  },
+  "keywords": [
+    "angularjs",
+    "angular",
+    "oauth2"
+  ],
+  "author": "Alexandre Bonhomme <wall-e@alexetmanon.com> (http://www.alexetmanon.com)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/alexetmanon/aetm-angular-oauth2/issues"
+  },
+  "homepage": "https://github.com/alexetmanon/aetm-angular-oauth2#readme",
+  "devDependencies": {
+    "gulp": "^3.9.1",
+    "gulp-rename": "^1.2.2",
+    "gulp-uglify": "^1.5.3"
+  }
+}
