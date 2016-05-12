@@ -17,7 +17,8 @@
     "node_modules",
     "bower_components",
     "test",
-    "tests"
+    "tests",
+    "make-release.sh"
   ],
   "dependencies": {
     "angular": "^1.5",
