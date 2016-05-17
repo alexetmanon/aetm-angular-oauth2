@@ -333,7 +333,9 @@
                                     status: 'connected'
                                 };
                             } else {
-                                return $q.reject('No token found in the API response.');
+                                return {
+                                    status: 'unknown'
+                                };
                             }
                         });
                     }
