@@ -357,6 +357,18 @@
                     forgetLogin();
                 };
 
+                /**
+                 * Updates request `Authorization` header with the one stored in `$http.defaults.headers.common.Authorization`
+                 * @param  Object config
+                 * @return Object
+                 */
+                auth.updateRequest = function (config) {
+                    // updates the buffered requests headers
+                    config.headers.Authorization = $http.defaults.headers.common.Authorization;
+
+                    return config;
+                };
+
                 return auth;
             }
         ];
