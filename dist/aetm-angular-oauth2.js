@@ -39,10 +39,17 @@
             '$q',
             '$http',
             '$log',
-            'localStorageService',
             '$window',
             '$rootScope',
-            function ($q, $http, $log, localStorageService, $window, $rootScope) {
+            'localStorageService',
+            function (
+                $q,
+                $http,
+                $log,
+                $window,
+                $rootScope,
+                localStorageService
+            ) {
                 var API_BASE = self.apiBase,
                     API_CLIENT_ID = self.apiClientId,
                     API_CLIENT_SECRET = self.apiClientSecret,
@@ -85,6 +92,7 @@
 
                 /**
                  * Get new accessToken from given refreshToken
+                 *
                  * @param  String refreshToken
                  * @return Promise
                  */
@@ -116,34 +124,63 @@
                 }
 
                 /**
+                 * 1. Checks the Facebook login status
+                 * 2. Manages a new login if needed
                  *
+                 * @return Promise
                  */
-                function checkLoginStatusFacebook() {
+                function handleLoginFacebook() {
                     var deferred = $q.defer();
 
-                    $rootScope.$broadcast('aetm-oauth2:login:start');
-
+                    // check actual login status (Facebook access)
                     facebookConnectPlugin.getLoginStatus(
                         function (response) {
-                            if (response.status === 'connected') {
-                                connectFromFacebook(response.authResponse.accessToken)
-                                    .then(function (data) {
-                                        deferred.resolve(data);
-                                    }, function (error) {
-                                        deferred.reject(error);
-                                    });
-                            } else {
-                                deferred.resolve(response);
+                            if (response.status === 'connected' && response.authResponse && response.authResponse.accessToken) {
+                                deferred.resolve(response.authResponse.accessToken);
+
+                                return;
                             }
+
+                            // If need ask Facebook for new connexion
+                            facebookConnectPlugin.login(['email'],
+                                function (response) {
+                                    if (response.authResponse && response.authResponse.accessToken) {
+                                        deferred.resolve(response.authResponse.accessToken);
+                                    } else {
+                                        deferred.reject(response);
+                                    }
+                                },
+                                deferred.reject
+                            );
                         },
-                        function (error) {
-                            deferred.reject(error);
-                        }
+                        deferred.reject
                     );
 
-                    deferred.promise.finally(function () {
-                        $rootScope.$broadcast('aetm-oauth2:login:end');
-                    });
+                    return deferred.promise;
+                }
+
+                /**
+                 * Manages Google connect.
+                 *
+                 * @return Promise
+                 */
+                function handleLoginGoogle() {
+                    var deferred = $q.defer();
+
+                    $window.plugins.googleplus.login({
+                            'scopes': 'profile email',
+                            'webClientId': GOOGLE_APP_ID,
+                            'offline': true
+                        },
+                        function (response) {
+                            if (response.idToken) {
+                                deferred.resolve(response.idToken);
+                            } else {
+                                deferred.reject(response);
+                            }
+                        },
+                        deferred.reject
+                    );
 
                     return deferred.promise;
                 }
@@ -197,7 +234,7 @@
                 }
 
                 /**
-                 * @param  Object credentials
+                 * @param Object credentials
                  */
                 function connectFromEmail(credentials) {
                     if (!credentials || !credentials.email || !credentials.password) {
@@ -226,75 +263,51 @@
                 }
 
                 /**
-                 * Request access token from fbconnect and perform API request
+                 * Request access token from Facebook and performs API request.
+                 *
+                 * @return Promise
                  */
                 auth.loginFacebook = function () {
-                    var deferred = $q.defer();
+                    var promise;
 
                     $rootScope.$broadcast('aetm-oauth2:login:start');
 
-                    facebookConnectPlugin.login(['email'],
-                        function (response) {
-                            if (response.authResponse && response.authResponse.accessToken) {
-                                connectFromFacebook(response.authResponse.accessToken)
-                                    .then(function (data) {
-                                        deferred.resolve(data);
-                                    }, function (error) {
-                                        deferred.reject(error);
-                                    });
-                            } else {
-                                deferred.reject(response);
-                            }
-                        },
-                        function (error) {
-                            deferred.reject(error);
-                        });
+                    promise = handleLoginFacebook().then(function (accessToken) {
+                        return connectFromFacebook(accessToken);
+                    });
 
-                    deferred.promise.finally(function () {
+                    promise.finally(function () {
                         $rootScope.$broadcast('aetm-oauth2:login:end');
                     });
 
-                    return deferred.promise;
+                    return promise;
                 };
 
                 /**
-                 * Request access token from Google+ connect and perform API request
+                 * Request access token from Google+ and performs API request.
+                 *
+                 * @return Promise
                  */
                 auth.loginGoogle = function () {
-                    var deferred = $q.defer();
+                    var promise;
 
                     $rootScope.$broadcast('aetm-oauth2:login:start');
 
-                    $window.plugins.googleplus.login({
-                            'scopes': 'profile email',
-                            'webClientId': GOOGLE_APP_ID,
-                            'offline': true
-                        },
-                        function (response) {
-                            if (response.idToken) {
-                                connectFromGoogle(response.idToken)
-                                    .then(function (data) {
-                                        deferred.resolve(data);
-                                    }, function (error) {
-                                        deferred.reject(error);
-                                    });
-                            } else {
-                                deferred.reject(response);
-                            }
-                        },
-                        function (error) {
-                            deferred.reject(error);
-                        });
+                    promise = handleLoginGoogle().then(function (idToken) {
+                        return connectFromGoogle(idToken);
+                    });
 
-                    deferred.promise.finally(function () {
+                    promise.finally(function () {
                         $rootScope.$broadcast('aetm-oauth2:login:end');
                     });
 
-                    return deferred.promise;
+                    return promise;
                 };
 
                 /**
-                 * Request access token directly to the API using `credentials`
+                 * Request access token directly to the API using `credentials`.
+                 *
+                 * @return Promise
                  */
                 auth.loginEmail = function (credentials) {
                     var promise;
@@ -310,16 +323,24 @@
                     return promise;
                 };
 
+                /**
+                 * @return Boolean
+                 */
                 auth.isConnected = function () {
                     return !!auth.accessToken;
                 };
 
+                /**
+                 * @return Object
+                 */
                 auth.getType = function () {
                     return auth.type;
                 };
 
                 /**
                  * Checks if credentials are stored or if last connexion was by social connect and try to connect.
+                 *
+                 * @return Promise
                  */
                 auth.checkLoginStatus = function () {
                     var storedLogin = localStorageService.get(STORAGE_KEY);
@@ -358,7 +379,8 @@
                 };
 
                 /**
-                 * Updates request `Authorization` header with the one stored in `$http.defaults.headers.common.Authorization`
+                 * Updates request `Authorization` header with the one stored in `$http.defaults.headers.common.Authorization`.
+                 *
                  * @param  Object config
                  * @return Object
                  */
