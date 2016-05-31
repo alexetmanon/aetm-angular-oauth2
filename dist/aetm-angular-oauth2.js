@@ -338,6 +338,15 @@
                 };
 
                 /**
+                 * @return Boolean
+                 */
+                auth.hasLoginStored = function () {
+                    var storedLogin = localStorageService.get(STORAGE_KEY);
+
+                    return storedLogin && storedLogin.oauthResponse && storedLogin.oauthResponse.access_token;
+                };
+
+                /**
                  * Checks if credentials are stored or if last connexion was by social connect and try to connect.
                  *
                  * @return Promise
