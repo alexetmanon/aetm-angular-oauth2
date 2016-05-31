@@ -118,7 +118,7 @@
 
                             $rootScope.$broadcast('aetm-oauth2:login:end');
 
-                            return error;
+                            throw error;
                         }
                     );
                 }
@@ -204,7 +204,7 @@
                         function (error) {
                             $log.error('API connection error', error);
 
-                            return error;
+                            throw error;
                         }
                     );
                 }
@@ -228,7 +228,7 @@
                         function (error) {
                             $log.error('API connection error', error);
 
-                            return error;
+                            throw error;
                         }
                     );
                 }
@@ -257,7 +257,7 @@
                         function (error) {
                             $log.error('API connection error', error);
 
-                            return error;
+                            throw error;
                         }
                     );
                 }
