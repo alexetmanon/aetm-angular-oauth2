@@ -114,7 +114,7 @@
                             return response;
                         },
                         function (error) {
-                            $log.error('API connection error', error);
+                            $log.debug('API connection error', error);
 
                             $rootScope.$broadcast('aetm-oauth2:login:end');
 
@@ -202,7 +202,7 @@
                             return response;
                         },
                         function (error) {
-                            $log.error('API connection error', error);
+                            $log.debug('API connection error', error);
 
                             throw error;
                         }
@@ -226,7 +226,7 @@
                             return response;
                         },
                         function (error) {
-                            $log.error('API connection error', error);
+                            $log.debug('API connection error', error);
 
                             throw error;
                         }
@@ -255,7 +255,7 @@
                             return response;
                         },
                         function (error) {
-                            $log.error('API connection error', error);
+                            $log.debug('API connection error', error);
 
                             throw error;
                         }
