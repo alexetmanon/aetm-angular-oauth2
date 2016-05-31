@@ -385,6 +385,8 @@
                     delete $http.defaults.headers.common.Authorization;
 
                     forgetLogin();
+
+                    $rootScope.$broadcast('aetm-oauth2:logout');
                 };
 
                 /**
