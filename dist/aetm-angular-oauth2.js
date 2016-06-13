@@ -356,7 +356,7 @@
 
                     if (storedLogin && storedLogin.oauthResponse && storedLogin.oauthResponse.access_token) {
 
-                        // refresh access token using stored refresk token and returns a connection status
+                        // refresh access token using stored refresh token and returns a connection status
                         return refreshAccess(storedLogin.oauthResponse.refresh_token, storedLogin.type).then(function (response) {
                             if (response.data && response.data.access_token) {
                                 return {
@@ -367,6 +367,14 @@
                                     status: 'unknown'
                                 };
                             }
+                        }, function (error) {
+                            if (error && error.data && error.data.error === "invalid_grant") {
+                                return {
+                                    status: 'disconnected'
+                                };
+                            }
+
+                            throw error;
                         });
                     }
 
