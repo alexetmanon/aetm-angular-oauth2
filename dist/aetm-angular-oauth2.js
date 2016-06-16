@@ -15,21 +15,42 @@
         var self = this;
 
         /**
-         * Local configs
+         * Default configs
          */
-        self.apiBase = "";
-        self.apiClientId = "";
-        self.apiClientSecret = "";
-        self.googleAppId = "";
+        self.apiBase = '';
+        self.apiOAuth2Endpoint = '/oauth/v2/token';
+        self.apiAuthorizationHeaderPrefix = 'Bearer';
+
+        self.apiClientId = '';
+        self.apiClientSecret = '';
+
+        self.googleAppId = '';
+        self.googleScopes = ['profile', 'email'];
+
+        self.facebookScopes = ['email'];
 
         /**
-         * @param  Object options
+         * @param Object options
          */
         self.configure = function (options) {
-            self.apiBase = options.apiBase || "";
-            self.apiClientId = options.apiClientId || "";
-            self.apiClientSecret = options.apiClientSecret || "";
-            self.googleAppId = options.googleAppId || "";
+            if (!options) {
+                throw 'Options object required !';
+            }
+
+            // OAuth2 API
+            self.apiBase = options.apiBase || self.apiBase;
+            self.apiOAuth2Endpoint = options.apiOAuth2Endpoint || self.apiOAuth2Endpoint;
+            self.apiAuthorizationHeaderPrefix = options.apiAuthorizationHeaderPrefix || self.apiAuthorizationHeaderPrefix;
+
+            self.apiClientId = options.apiClientId || self.apiClientId;
+            self.apiClientSecret = options.apiClientSecret || self.apiClientSecret;
+
+            // Google
+            self.googleAppId = options.googleAppId || self.googleAppId;
+            self.googleScopes= options.googleScopes || self.googleScopes;
+
+            // Facebook
+            self.facebookScopes = options.facebookScopes || self.facebookScopes;
         };
 
         /**
@@ -51,9 +72,17 @@
                 localStorageService
             ) {
                 var API_BASE = self.apiBase,
+                    API_OAUTH2_ENDPOINT = self.apiOAuth2Endpoint,
+                    API_AUTHORIZATION_HEADER_PREFIX = self.apiAuthorizationHeaderPrefix,
+
                     API_CLIENT_ID = self.apiClientId,
                     API_CLIENT_SECRET = self.apiClientSecret,
+
                     GOOGLE_APP_ID = self.googleAppId,
+                    GOOGLE_SCOPES = self.googleScopes,
+
+                    FACEBOOK_SCOPES = self.facebookScopes,
+
                     STORAGE_KEY = 'aetmAuthStorage';
 
                 var auth = {
@@ -69,7 +98,7 @@
                     auth.type = type;
 
                     // add token to all request
-                    $http.defaults.headers.common.Authorization = 'Bearer ' + auth.accessToken;
+                    $http.defaults.headers.common.Authorization = API_AUTHORIZATION_HEADER_PREFIX + ' ' + auth.accessToken;
 
                     // remenbers login
                     rememberLogin(type, response);
@@ -99,7 +128,7 @@
                 function refreshAccess(refreshToken, type) {
                     $rootScope.$broadcast('aetm-oauth2:login:start');
 
-                    return $http.post(API_BASE + '/oauth/v2/token', {
+                    return $http.post(API_BASE + API_OAUTH2_ENDPOINT, {
                         "grant_type": "refresh_token",
                         "client_id": API_CLIENT_ID,
                         "client_secret": API_CLIENT_SECRET,
@@ -142,7 +171,7 @@
                             }
 
                             // If need ask Facebook for new connexion
-                            facebookConnectPlugin.login(['email'],
+                            facebookConnectPlugin.login(FACEBOOK_SCOPES,
                                 function (response) {
                                     if (response.authResponse && response.authResponse.accessToken) {
                                         deferred.resolve(response.authResponse.accessToken);
@@ -168,7 +197,7 @@
                     var deferred = $q.defer();
 
                     $window.plugins.googleplus.login({
-                            'scopes': 'profile email',
+                            'scopes': GOOGLE_SCOPES.join(' '),
                             'webClientId': GOOGLE_APP_ID,
                             'offline': true
                         },
@@ -189,7 +218,7 @@
                  * @param Object facebookResponse
                  */
                 function connectFromFacebook(accessToken) {
-                    return $http.post(API_BASE + '/oauth/v2/token', {
+                    return $http.post(API_BASE + API_OAUTH2_ENDPOINT, {
                         "grant_type": "http://platform.local/grants/facebook_access_token",
                         "client_id": API_CLIENT_ID,
                         "client_secret": API_CLIENT_SECRET,
@@ -213,7 +242,7 @@
                  * @param Object googleResponse
                  */
                 function connectFromGoogle(idToken) {
-                    return $http.post(API_BASE + '/oauth/v2/token', {
+                    return $http.post(API_BASE + API_OAUTH2_ENDPOINT, {
                         "grant_type": "http://platform.local/grants/google_access_token",
                         "client_id": API_CLIENT_ID,
                         "client_secret": API_CLIENT_SECRET,
@@ -241,7 +270,7 @@
                         return $q.reject('Missing credentials. "email" and "password" required.');
                     }
 
-                    return $http.post(API_BASE + '/oauth/v2/token', {
+                    return $http.post(API_BASE + API_OAUTH2_ENDPOINT, {
                         "grant_type": "password",
                         "client_id": API_CLIENT_ID,
                         "client_secret": API_CLIENT_SECRET,
