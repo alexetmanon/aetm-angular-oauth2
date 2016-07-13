@@ -153,6 +153,8 @@
                 }
 
                 /**
+                 *  MOBILE ONLY
+                 *
                  * 1. Checks the Facebook login status
                  * 2. Manages a new login if needed
                  *
@@ -161,34 +163,39 @@
                 function handleLoginFacebook() {
                     var deferred = $q.defer();
 
-                    // check actual login status (Facebook access)
-                    facebookConnectPlugin.getLoginStatus(
-                        function (response) {
-                            if (response.status === 'connected' && response.authResponse && response.authResponse.accessToken) {
-                                deferred.resolve(response.authResponse.accessToken);
+                    document.addEventListener('deviceready', function () {
 
-                                return;
-                            }
+                        // check actual login status (Facebook access)
+                        facebookConnectPlugin.getLoginStatus(
+                            function (response) {
+                                if (response.status === 'connected' && response.authResponse && response.authResponse.accessToken) {
+                                    deferred.resolve(response.authResponse.accessToken);
 
-                            // If need ask Facebook for new connexion
-                            facebookConnectPlugin.login(FACEBOOK_SCOPES,
-                                function (response) {
-                                    if (response.authResponse && response.authResponse.accessToken) {
-                                        deferred.resolve(response.authResponse.accessToken);
-                                    } else {
-                                        deferred.reject(response);
-                                    }
-                                },
-                                deferred.reject
-                            );
-                        },
-                        deferred.reject
-                    );
+                                    return;
+                                }
+
+                                // If need ask Facebook for new connexion
+                                facebookConnectPlugin.login(FACEBOOK_SCOPES,
+                                    function (response) {
+                                        if (response.authResponse && response.authResponse.accessToken) {
+                                            deferred.resolve(response.authResponse.accessToken);
+                                        } else {
+                                            deferred.reject(response);
+                                        }
+                                    },
+                                    deferred.reject
+                                );
+                            },
+                            deferred.reject
+                        );
+                    }, false);
 
                     return deferred.promise;
                 }
 
                 /**
+                 * MOBILE ONLY
+                 *
                  * Manages Google connect.
                  *
                  * @return Promise
@@ -196,20 +203,22 @@
                 function handleLoginGoogle() {
                     var deferred = $q.defer();
 
-                    $window.plugins.googleplus.login({
-                            'scopes': GOOGLE_SCOPES.join(' '),
-                            'webClientId': GOOGLE_APP_ID,
-                            'offline': true
-                        },
-                        function (response) {
-                            if (response.idToken) {
-                                deferred.resolve(response.idToken);
-                            } else {
-                                deferred.reject(response);
-                            }
-                        },
-                        deferred.reject
-                    );
+                    document.addEventListener('deviceready', function () {
+                        $window.plugins.googleplus.login({
+                                'scopes': GOOGLE_SCOPES.join(' '),
+                                'webClientId': GOOGLE_APP_ID,
+                                'offline': true
+                            },
+                            function (response) {
+                                if (response.idToken) {
+                                    deferred.resolve(response.idToken);
+                                } else {
+                                    deferred.reject(response);
+                                }
+                            },
+                            deferred.reject
+                        );
+                    }, false);
 
                     return deferred.promise;
                 }
